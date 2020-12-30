@@ -1,11 +1,15 @@
+// Copyright IBM Corp. 2016,2019. All Rights Reserved.
+// Node module: strong-soap
+// This file is licensed under the MIT License.
+// License text available at https://opensource.org/licenses/MIT
+
 "use strict";
 
 var fs = require('fs'),
     soap = require('..').soap,
     assert = require('assert'),
     request = require('request'),
-    http = require('http'),
-    lastReqAddress;
+    http = require('http');
 
 var test = {};
 test.server = null;
@@ -124,7 +128,7 @@ describe('SOAP Server with Options', function() {
       // console.log(test.baseUrl);
       request(test.baseUrl, function(err, res, body) {
         assert.ok(!err);
-        console.log(body);
+        // console.log(body);
         done();
       });
     });
@@ -150,7 +154,7 @@ describe('SOAP Server with Options', function() {
       }
       request(test.baseUrl, function(err, res, body) {
         assert.ok(!err);
-        console.log(body);
+        // console.log(body);
         done();
       });
     });

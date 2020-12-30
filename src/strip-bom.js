@@ -1,3 +1,8 @@
+// Copyright IBM Corp. 2016,2019. All Rights Reserved.
+// Node module: strong-soap
+// This file is licensed under the MIT License.
+// License text available at https://opensource.org/licenses/MIT
+
 /*
 strip the BOM characters in the beginning of UTF-8 
 or other unicode encoded strings
@@ -11,7 +16,7 @@ function stripBom(str){
 	if (typeof str !== 'string') {
 		throw new Error('Invalid input, only string allowed');
 	}
-	var chunk = new Buffer(str);
+	var chunk = Buffer.from(str);
 	var transformed;
 	var value = str;
 	if (chunk[0] === 0xFE && chunk[1] === 0XFF) {

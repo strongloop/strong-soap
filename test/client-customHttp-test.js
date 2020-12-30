@@ -1,11 +1,14 @@
+// Copyright IBM Corp. 2015,2016. All Rights Reserved.
+// Node module: strong-soap
+// This file is licensed under the MIT License.
+// License text available at https://opensource.org/licenses/MIT
+
 'use strict';
 
 var fs = require('fs'),
   soap = require('..').soap,
-  http = require('http'),
   assert = require('assert'),
   duplexer = require('duplexer'),
-  req = require('request'),
   httpClient = require('..').http,
 // stream = require('stream'),
   stream = require('readable-stream'),

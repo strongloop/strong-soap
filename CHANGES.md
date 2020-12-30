@@ -1,3 +1,235 @@
+2020-12-30, Version 1.23.0
+==========================
+
+ * Update `xml-crypto` dependency to `2.0.0` (Marco Reyes)
+
+ * chore: Update `package-lock.json` (Marco Reyes)
+
+2020-02-25, Version 1.22.1
+==========================
+
+ * Allow nillable date to be null (Richard Sunbury)
+
+ * chore: remove unused require statements (Raymond Feng)
+
+
+2020-02-10, Version 1.22.0
+==========================
+
+ * chore: add package-lock.json (Raymond Feng)
+
+ * Remove unnecessary files from npm packages (Avindra Goolcharan)
+
+ * fixed formating in README (Christopher Wade)
+
+ * chore: add stalebot (Diana Lau)
+
+ * Avoid line feed problems (Win/Linux) (Christian Herzog)
+
+
+2019-07-19, Version 1.21.0
+==========================
+
+ * add support attachments (Allan Marques)
+
+
+2019-06-03, Version 1.20.0
+==========================
+
+ * Replace ursa with node 12 core crypto or node-rsa (Raymond Feng)
+
+ * chore: update copyrights years (Agnes Lin)
+
+ * Add support for 1/0 booleans (Stefano Marotta)
+
+ * fix: update lodash (jannyHou)
+
+
+2019-05-02, Version 1.19.1
+==========================
+
+ * Use Buffer.from to replace depreated new Buffer (Raymond Feng)
+
+ * Fix xml date/time/dateTime conversion (Raymond Feng)
+
+ * Replace deprecated Buffer api (Raymond Feng)
+
+ * Add promise based stubs for testing (Rijnhard Hessel)
+
+
+2019-04-29, Version 1.19.0
+==========================
+
+ * Upgrade dependencies (Raymond Feng)
+
+
+2019-03-28, Version 1.18.0
+==========================
+
+ * chore: upgrade deps (Raymond Feng)
+
+ * Tests for parseValue with xsd date dateTime (arthmoeros)
+
+ * Fix for xs:date with tz format (arthmoeros)
+
+
+2019-02-21, Version 1.17.0
+==========================
+
+ * Fix use options.request in wsdl.js (JB)
+
+
+2019-02-14, Version 1.16.0
+==========================
+
+ * Update version of httpntlm (Jon Roberts)
+
+
+2019-01-22, Version 1.15.0
+==========================
+
+ * Adding enforce restrictions option (Romeu Palos de Gouvea)
+
+
+2018-10-18, Version 1.14.0
+==========================
+
+ * Update CODEOWNERS (Raymond Feng)
+
+ * Rename test so it gets run (Jon Roberts)
+
+ * Return error via callback (Jon Roberts)
+
+
+2018-10-12, Version 1.13.2
+==========================
+
+ * changed this.soapActionRequired to boolean (Vineet Jain)
+
+ * Support of sending soapAction in v1.2 (Vineet Jain)
+
+
+2018-09-24, Version 1.13.1
+==========================
+
+ * Add tests to cover maxOccurs (Jon Roberts)
+
+ * Change to isMany logic (Jon Roberts)
+
+
+2018-09-17, Version 1.13.0
+==========================
+
+ * Update ssl key/cert to pass node 10 (Raymond Feng)
+
+ * Update` strong-globalize` to v4.1.1 (Runrioter Wung)
+
+ * Switch to strong-ursa to support Node 10 (Raymond Feng)
+
+ * Add ability to load in a sync way (DomStorey)
+
+ * Add the ability to loadSync (DomStorey)
+
+ * fix code blocks in readme.md with their type (Jiri Spac)
+
+ * fix: use proper variable names (biniam)
+
+
+2018-08-08, Version 1.12.1
+==========================
+
+ * Allow documentation tag under types (Jon Roberts)
+
+
+2018-08-06, Version 1.12.0
+==========================
+
+ * Create client from cached wsdl (Jon Roberts)
+
+ * add forgotten options to soap.listen(...) (Vladimir Latyshev)
+
+
+2018-07-10, Version 1.11.0
+==========================
+
+ * Load a wsdl with no imports from the cache (Jon Roberts)
+
+
+2018-07-09, Version 1.10.0
+==========================
+
+ * [WebFM] cs/pl/ru translation (candytangnb)
+
+ * fix soap-stub example on README.md (Carlos Assis)
+
+
+2018-05-08, Version 1.9.0
+=========================
+
+
+
+2018-05-07, Version 1.8.0
+=========================
+
+ * feat: add promise support for client operation (shimks)
+
+
+2018-04-12, Version 1.7.0
+=========================
+
+ * fix: add element text value (Raymond Feng)
+
+
+2018-03-26, Version 1.6.2
+=========================
+
+ * fix xsd include/import recursive processing (Raymond Feng)
+
+
+2018-03-19, Version 1.6.1
+=========================
+
+ * fix: add array check for concat (Raymond Feng)
+
+ * build: drop node 4.x support (Raymond Feng)
+
+
+2018-03-16, Version 1.6.0
+=========================
+
+ * fix: improve wsdl types processing for multiple schemas (Raymond Feng)
+
+ * chore: clean up deps (Raymond Feng)
+
+
+2018-01-31, Version 1.5.0
+=========================
+
+ * fix: upgrade deps (Raymond Feng)
+
+ * fix: make sure xml elements are mapped based the order of xsd (Raymond Feng)
+
+ * Fix Typo: RPC Literal (Thomas Richter)
+
+ * check the original passwordDigest method fails against SoapUI output (Tom Hodder)
+
+ * revert formatting changes by format on save in vscode (Tom Hodder)
+
+ * Updated passwordDigest method and related tests (Tom Hodder)
+
+ * missing semi colons (Branden Horiuchi)
+
+ * removed lodash dependency (Branden Horiuchi)
+
+ * added CookieSecurity test (Branden Horiuchi)
+
+ * better cookie parsing handle the case where the header for set-cookie is a string and not an array (Branden Horiuchi)
+
+ * fixing header parse objects would not have been parsed (Branden Horiuchi)
+
+ * added cookie security (Branden Horiuchi)
+
+
 2018-01-24, Version 1.4.2
 =========================
 

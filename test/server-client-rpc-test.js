@@ -1,18 +1,18 @@
+// Copyright IBM Corp. 2016,2017. All Rights Reserved.
+// Node module: strong-soap
+// This file is licensed under the MIT License.
+// License text available at https://opensource.org/licenses/MIT
+
 "use strict";
 
 var fs = require('fs'),
     soap = require('..').soap,
     assert = require('assert'),
-    request = require('request'),
-    http = require('http'),
-    lastReqAddress;
-
-
+    http = require('http');
 
 describe('RPC style tests', function() {
 
-
-  describe('RPC Lietral', function() {
+  describe('RPC Literal', function() {
     var test = {};
     test.server = null;
     test.service = {

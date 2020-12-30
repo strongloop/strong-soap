@@ -1,3 +1,8 @@
+// Copyright IBM Corp. 2016,2019. All Rights Reserved.
+// Node module: strong-soap
+// This file is licensed under the MIT License.
+// License text available at https://opensource.org/licenses/MIT
+
 'use strict';
 
 var g = require('./globalize');
@@ -13,7 +18,8 @@ var HttpClient = require('./http'),
   _ = require('lodash'),
   debug = require('debug')('strong-soap:client'),
   debugDetail = require('debug')('strong-soap:client:detail'),
-  debugSensitive = require('debug')('strong-soap:client:sensitive');
+  debugSensitive = require('debug')('strong-soap:client:sensitive'),
+  utils = require('./utils');
 
 class Client extends Base {
   constructor(wsdl, endpoint, options) {
@@ -75,6 +81,7 @@ class Client extends Base {
     var self = this;
     var temp;
     return function(args, callback, options, extraHeaders) {
+      if (!args) args = {};
       if (typeof args === 'function') {
         callback = args;
         args = {};
@@ -87,15 +94,18 @@ class Client extends Base {
         callback = extraHeaders;
         extraHeaders = options;
         options = temp;
+      } else if (typeof callback === 'object') {
+        extraHeaders = options;
+        options = callback;
+        callback = undefined;
       }
-      self._invoke(operation, args, location,
-        function(error, result, raw, soapHeader) {
-          callback(error, result, raw, soapHeader);
-        }, options, extraHeaders);
+      callback = callback || utils.createPromiseCallback();
+      self._invoke(operation, args, location, callback, options, extraHeaders);
+      return callback.promise;
     };
   }
 
-  
+
 
   _invoke(operation, args, location, callback, options, extraHeaders) {
     var self = this,
@@ -136,7 +146,7 @@ class Client extends Base {
       soapAction = ((ns.lastIndexOf("/") !== ns.length - 1) ? ns + "/" : ns) + name;
     }
 
-    if (soapVersion !== '1.2') {
+    if (soapVersion !== '1.2' || operation.soapActionRequired) {
       headers.SOAPAction = '"' + soapAction + '"';
     }
 

@@ -1,8 +1,14 @@
+// Copyright IBM Corp. 2013,2018. All Rights Reserved.
+// Node module: strong-soap
+// This file is licensed under the MIT License.
+// License text available at https://opensource.org/licenses/MIT
+
 'use strict';
 
 var fs = require('fs'),
     soap = require('..').soap,
     http = require('http'),
+    WSDL = soap.WSDL,
     assert = require('assert'),
     QName = require('..').QName;
 
@@ -97,10 +103,72 @@ describe('SOAP Client', function() {
     });
   });
 
+  describe('Create a client from a wsdl preloaded in the options', function() {
+
+    var defaultNamespaceWsdl;
+
+    beforeEach(function(done) {
+
+      // Read the contents of the WSDL from the file system
+      fs.readFile(__dirname + '/wsdl/default_namespace.wsdl', 'utf8', function (err, defaultNamespaceWsdlContents) {
+        if (err) {
+          done(err);
+        } else {
+
+          var options = {
+            WSDL_CACHE: {}
+          };
+          // Create the initial wsdl directly
+          defaultNamespaceWsdl = new WSDL(defaultNamespaceWsdlContents, undefined, {});
+
+          // Load the wsdl fully once its been created in memory
+          defaultNamespaceWsdl.load(function () {
+            assert.equal(defaultNamespaceWsdl.definitions.$name, "MyService");
+          });
+          done();
+        }
+      });
+    });
+
+    it('should successfully create a client based on the wsdl in the options', function(done) {
+
+      var options = {
+        WSDL_CACHE: {
+          preloadedCachedWsdl: defaultNamespaceWsdl
+        }
+      };
+      soap.createClient('preloadedCachedWsdl', options, function(err, client) {
+
+        assert.ok(client);
+        assert.ok(client.getSoapHeaders().length === 0);
+
+        // Preform the same tests from "should add and clear soap headers"
+        // to verify client was created ok.
+
+        var i1 = client.addSoapHeader('about-to-change-1');
+        var i2 = client.addSoapHeader('about-to-change-2');
+
+        assert.ok(i1 === 0);
+        assert.ok(i2 === 1);
+        assert.ok(client.getSoapHeaders().length === 2);
+
+        client.changeSoapHeader(0,'header1');
+        client.changeSoapHeader(1,'header2');
+        assert.ok(client.getSoapHeaders()[0].xml === 'header1');
+        assert.ok(client.getSoapHeaders()[1].xml === 'header2');
+
+        client.clearSoapHeaders();
+        assert.ok(client.getSoapHeaders().length === 0);
+        done();
+      });
+    });
+  });
+
   describe('Headers in request and last response', function() {
     var server = null;
     var hostname = '127.0.0.1';
     var port = 0;
+    var rawBody = '<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"><soap:Body><Response>temp response</Response></soap:Body></soap:Envelope>';
 
     before(function(done) {
       server = http.createServer(function (req, res) {
@@ -109,7 +177,7 @@ describe('SOAP Client', function() {
         res.setHeader('status', status_value);
         res.statusCode = 200;
         //res.write(JSON.stringify({tempResponse: 'temp'}), 'utf8');
-        res.write('<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"><soap:Body><Response>temp response</Response></soap:Body></soap:Envelope>');
+        res.write(rawBody);
         res.end();
       }).listen(port, hostname, done);
     });
@@ -267,8 +335,8 @@ describe('SOAP Client', function() {
 
         //lastRequest should have proper header value of above JSON header object serialized based on header schema defined
         //in default-namespace1.wsdl
-        var lastRequest = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Header>\n    <ns1:MyHeaderElem xmlns:ns1=\"http://www.example.com/v1\">\n      <ns1:esnext>false</ns1:esnext>\n"      
-        + "      <ns1:moz>true</ns1:moz>\n      <ns1:boss>true</ns1:boss>\n      <ns1:node>true</ns1:node>\n      <ns1:validthis>true</ns1:validthis>\n      <ns1:globals>\n        <ns1:EventEmitter>true</ns1:EventEmitter>\n        <ns1:Promise>true</ns1:Promise>\n      </ns1:globals>\n" 
+        var lastRequest = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\n  <soap:Header>\n    <ns1:MyHeaderElem xmlns:ns1=\"http://www.example.com/v1\">\n      <ns1:esnext>false</ns1:esnext>\n"
+        + "      <ns1:moz>true</ns1:moz>\n      <ns1:boss>true</ns1:boss>\n      <ns1:node>true</ns1:node>\n      <ns1:validthis>true</ns1:validthis>\n      <ns1:globals>\n        <ns1:EventEmitter>true</ns1:EventEmitter>\n        <ns1:Promise>true</ns1:Promise>\n      </ns1:globals>\n"
         + "    </ns1:MyHeaderElem>\n  </soap:Header>\n  <soap:Body/>\n</soap:Envelope>";
         client.MyOperation({}, function(err, result) {
           //using lastRequest instead of lastRequestHeaders() since this doesn't contain soap header which this test case needs to test.
@@ -392,6 +460,69 @@ describe('SOAP Client', function() {
 
           done();
         });
+      }, 'http://' + hostname + ':' + server.address().port);
+    });
+
+    it('should allow calling the method as a promise with no arguments', function(done) {
+      soap.createClient(__dirname+'/wsdl/json_response.wsdl', function(err, client) {
+        assert.ok(client);
+        assert.ok(!err);
+        client.MyOperation().then(({result, envelope}) => {
+          assert.ok(!err);
+          assert.ok(result);
+          assert.ok(result === 'temp response');
+          assert.ok(envelope === rawBody);
+          assert.ok(client.lastResponseHeaders.status === 'fail');
+          done();
+        }, done).catch(done);
+      }, 'http://' + hostname + ':' + server.address().port);
+    });
+
+    it('should allow calling the method as a promise with only args', function(done) {
+      soap.createClient(__dirname+'/wsdl/json_response.wsdl', function(err, client) {
+        assert.ok(client);
+        assert.ok(!err);
+        client.MyOperation({Request: 'temp request'}).then(({result, envelope}) => {
+          assert.ok(!err);
+          assert.ok(result);
+          assert.ok(result === 'temp response');
+          assert.ok(envelope === rawBody);
+          assert.ok(client.lastResponseHeaders.status === 'fail');
+          done();
+        }, done).catch(done);
+      }, 'http://' + hostname + ':' + server.address().port);
+    });
+
+    it('should allow calling the method as a promise with args and options', function(done) {
+      soap.createClient(__dirname+'/wsdl/json_response.wsdl', function(err, client) {
+        assert.ok(client);
+        assert.ok(!err);
+        client.MyOperation({Request: 'temp request'}, {headers: {'options-test-header': 'test'}}).then(({result, envelope}) => {
+          assert.ok(!err);
+          assert.ok(result);
+          assert.ok(result === 'temp response');
+          assert.ok(envelope === rawBody);
+          assert.ok(client.lastResponseHeaders.status === 'fail');
+          assert.ok(client.lastRequestHeaders['options-test-header'] === 'test');
+          done();
+        }, done).catch(done);
+      }, 'http://' + hostname + ':' + server.address().port);
+    });
+
+    it('should allow calling the method as a promise with args, options, and extra headers', function(done) {
+      soap.createClient(__dirname+'/wsdl/json_response.wsdl', function(err, client) {
+        assert.ok(client);
+        assert.ok(!err);
+        client.MyOperation({Request: 'temp request'}, {headers: {'options-test-header': 'test'}}, {'test-header': 'test'}).then(({result, envelope, soapHeader}) => {
+          assert.ok(!err);
+          assert.ok(result);
+          assert.ok(result === 'temp response');
+          assert.ok(envelope === rawBody);
+          assert.ok(client.lastResponseHeaders.status === 'pass');
+          assert.ok(client.lastRequestHeaders['options-test-header'] === 'test');
+          assert.ok(client.lastRequestHeaders['test-header'] === 'test');
+          done();
+        }, done).catch(done);
       }, 'http://' + hostname + ':' + server.address().port);
     });
   });

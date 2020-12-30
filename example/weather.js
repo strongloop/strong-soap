@@ -1,11 +1,10 @@
+// Copyright IBM Corp. 2016. All Rights Reserved.
+// Node module: strong-soap
+// This file is licensed under the MIT License.
+// License text available at https://opensource.org/licenses/MIT
 
 "use strict";
 
-var fs = require('fs'),
-  assert = require('assert'),
-  request = require('request'),
-  http = require('http'),
-  lastReqAddress;
 var soap = require('..').soap;
 var XMLHandler = soap.XMLHandler;
 var xmlHandler = new XMLHandler();

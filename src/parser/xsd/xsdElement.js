@@ -1,3 +1,8 @@
+// Copyright IBM Corp. 2016,2018. All Rights Reserved.
+// Node module: strong-soap
+// This file is licensed under the MIT License.
+// License text available at https://opensource.org/licenses/MIT
+
 'use strict';
 
 var Element = require('../element');
@@ -8,7 +13,7 @@ class XSDElement extends Element {
   constructor(nsName, attrs, options) {
     super(nsName, attrs, options);
   }
-  
+
   describeChildren(definitions, descriptor) {
     var children = this.children || [];
     if (children.length === 0) return descriptor;
@@ -39,7 +44,7 @@ class XSDElement extends Element {
    */
   isMany() {
     if (this.$maxOccurs === 'unbounded') return true;
-    return Number(this.$maxOccurs) > 0;
+    return Number(this.$maxOccurs) > 1;
   }
 }
 

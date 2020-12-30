@@ -1,3 +1,8 @@
+// Copyright IBM Corp. 2016,2018. All Rights Reserved.
+// Node module: strong-soap
+// This file is licensed under the MIT License.
+// License text available at https://opensource.org/licenses/MIT
+
 'use strict';
 
 var _ = require('lodash');
@@ -19,9 +24,10 @@ class Schema extends XSDElement {
   }
 
   merge(source, isInclude) {
+    if (source === this) return this;
     assert(source instanceof Schema);
     if (this.$targetNamespace === source.$targetNamespace ||
-      // xsd:include allows the target schema that does not have targetNamspace
+      // xsd:include allows the target schema that does not have targetNamespace
       (isInclude && source.$targetNamespace === undefined)) {
       _.merge(this.complexTypes, source.complexTypes);
       _.merge(this.simpleTypes, source.simpleTypes);
@@ -30,6 +36,9 @@ class Schema extends XSDElement {
       _.merge(this.attributes, source.attributes);
       _.merge(this.attributeGroups, source.attributeGroups);
       _.merge(this.xmlns, source.xmlns);
+      if (Array.isArray(source.includes)) {
+        this.includes = _.uniq(this.includes.concat(source.includes));
+      }
     }
     return this;
   }

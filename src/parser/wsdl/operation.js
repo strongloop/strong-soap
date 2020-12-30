@@ -1,3 +1,8 @@
+// Copyright IBM Corp. 2016,2018. All Rights Reserved.
+// Node module: strong-soap
+// This file is licensed under the MIT License.
+// License text available at https://opensource.org/licenses/MIT
+
 'use strict';
 
 var g = require('../../globalize');
@@ -42,6 +47,7 @@ class Operation extends WSDLElement {
       case 'operation': // soap:operation
         this.soapAction = child.$soapAction || '';
         this.style = child.$style || '';
+        this.soapActionRequired = child.$soapActionRequired === 'true' || child.$soapActionRequired === '1' || false;
         //figure out from the binding operation soap version 1.1 or 1.2
         if (child.nsURI === 'http://schemas.xmlsoap.org/wsdl/soap/') {
           this.soapVersion ='1.1';
@@ -55,16 +61,20 @@ class Operation extends WSDLElement {
   }
 
   postProcess(definitions) {
-    if (this._processed) return; // Already processed
-    if (this.input) this.input.postProcess(definitions);
-    if (this.output) this.output.postProcess(definitions);
-    for (let i = 0, n = this.faults.length; i < n; i++) {
-      this.faults[i].postProcess(definitions);
+    try {
+      if (this._processed) return; // Already processed
+      if (this.input) this.input.postProcess(definitions);
+      if (this.output) this.output.postProcess(definitions);
+      for (let i = 0, n = this.faults.length; i < n; i++) {
+        this.faults[i].postProcess(definitions);
+      }
+      if (this.parent.name === 'binding') {
+        this.getMode();
+      }
+      this._processed = true;
+    } catch (err) {
+      throw err;
     }
-    if (this.parent.name === 'binding') {
-      this.getMode();
-    }
-    this._processed = true;
   }
 
   static describeHeaders(param, definitions) {
@@ -173,7 +183,7 @@ class Operation extends WSDLElement {
               var elementDescriptor = part.element.describe(definitions);
               inputParts.addElement(elementDescriptor);
             }
-          } 
+          }
         }
         if (this.output && this.output.body) {
           for (let p in this.output.body.parts) {
@@ -346,8 +356,10 @@ class Operation extends WSDLElement {
         for (let p in this.input.body.parts) {
           let part = this.input.body.parts[p];
           element = part.element;
-          assert(part.element && !part.type,
-            'Document/literal part should use element');
+          if (!(part.element && !part.type)) {
+            console.error('Document/literal part should use element', part);
+            throw new Error('Document/literal part should use element');
+          }
           count++;
         }
       }

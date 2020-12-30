@@ -1,3 +1,8 @@
+// Copyright IBM Corp. 2015,2019. All Rights Reserved.
+// Node module: strong-soap
+// This file is licensed under the MIT License.
+// License text available at https://opensource.org/licenses/MIT
+
 var _ = require('lodash');
 
 var aliasedClientStubs = {};
@@ -21,7 +26,9 @@ var clientStubs = {};
 module.exports = {
   createClient: createClient,
   createErroringStub: createErroringStub,
+  createErroringStubAsync: createErroringStubAsync,
   createRespondingStub: createRespondingStub,
+  createRespondingStubAsync: createRespondingStubAsync,
   errOnCreateClient: false,
   getStub: getStub,
   registerClient: registerClient,
@@ -83,6 +90,30 @@ function createErroringStub(err) {
 }
 
 /**
+ * Returns a method that rejects all promises given to the method it is attached
+ * to with the given error.
+ *
+ * <pre>
+ * myClientStub.someMethod.errorOnCall = createErroringStubAsync(error);
+ *
+ * // elsewhere
+ *
+ * myClientStub.someMethod.errorOnCall();
+ * </pre>
+ *
+ * @param {?} object anything
+ * @return {Function}
+ */
+function createErroringStubAsync(err) {
+  return function() {
+    this.args.forEach(function(argSet) {
+      setTimeout(argSet[1].bind(null, err));
+    });
+    this.rejects(err);
+  };
+}
+
+/**
  * Returns a method that calls all callbacks given to the method it is attached
  * to with the given response.
  *
@@ -103,6 +134,30 @@ function createRespondingStub(object) {
       setTimeout(argSet[1].bind(null, null, object));
     });
     this.yields(null, object);
+  };
+}
+
+/**
+ * Returns a method that resolves all promises given to the method it is attached
+ * to with the given response.
+ *
+ * <pre>
+ * myClientStub.someMethod.respondWithError = createRespondingStubAsync(errorResponse);
+ *
+ * // elsewhere
+ *
+ * myClientStub.someMethod.respondWithError();
+ * </pre>
+ *
+ * @param {?} object anything
+ * @return {Function}
+ */
+function createRespondingStubAsync(object) {
+  return function() {
+    this.args.forEach(function(argSet) {
+      setTimeout(argSet[1].bind(null, null, object));
+    });
+    this.resolves(object);
   };
 }
 

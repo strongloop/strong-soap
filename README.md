@@ -75,7 +75,7 @@ Start with the WSDL for the web service you want to invoke. For example, the sto
 
 Create a new SOAP client from WSDL URL using `soap.createClient(url[, options], callback)`. Also supports a local file system path. An instance of `Client` is passed to the `soap.createClient` callback.  It is used to execute methods on the soap service.
 
-```
+```js
 "use strict";
 
 var soap = require('strong-soap').soap;
@@ -99,9 +99,47 @@ soap.createClient(url, options, function(err, client) {
 
 ```
 
+As well as creating a client via a `url`, an existing [WSDL](#wsdl) object can be passed in via `options.WSDL_CACHE`.
+
+```js
+var soap = require('strong-soap').soap;
+var WSDL = soap.WSDL;
+
+var url = 'http://www.webservicex.net/stockquote.asmx?WSDL';
+
+// Pass in WSDL options if any
+
+var options = {};
+WSDL.open(url,options,
+  function(err, wsdl) {
+    // You should be able to get to any information of this WSDL from this object. Traverse
+    // the WSDL tree to get  bindings, operations, services, portTypes, messages,
+    // parts, and XSD elements/Attributes.
+
+    // Set the wsdl object in the cache. The key (e.g. 'stockquotewsdl')
+    // can be anything, but needs to match the parameter passed into soap.createClient()
+    var clientOptions = {
+      WSDL_CACHE : {
+        stockquotewsdl: wsdl
+      }
+    };
+    soap.createClient('stockquotewsdl', clientOptions, function(err, client) {
+      var method = client['StockQuote']['StockQuoteSoap']['GetQuote'];
+      method(requestArgs, function(err, result, envelope, soapHeader) {
+
+      //response envelope
+      console.log('Response Envelope: \n' + envelope);
+      //'result' is the response body
+      console.log('Result: \n' + JSON.stringify(result));
+    });
+  });
+});
+```
+
+
 The Request envelope created by above service invocation:
 
-```
+```xml
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
   <soap:Header/>
@@ -118,7 +156,7 @@ Request, Response and Fault samples.
 
 The `options` argument allows you to customize the client with the following properties:
 
-- `endpoint``: to override the SOAP service's host specified in the `.wsdl` file.
+- `endpoint`: to override the SOAP service's host specified in the `.wsdl` file.
 - `request`: to override the [request](https://github.com/request/request) module.
 - `httpClient`: to provide your own http client that implements `request(rurl, data, callback, exheaders, exoptions)`.
 - `envelopeKey`: to set specific key instead of <pre><<b>soap</b>:Body></<b>soap</b>:Body></pre>
@@ -131,7 +169,7 @@ Note: for versions of node >0.10.X, you may need to specify `{connection: 'keep-
 
 User can define extra HTTP headers to be sent on the request.
 
-```
+```js
 var clientOptions = {};
 soap.createClient(url, clientOptions, function(err, client) {
   var customRequestHeader = {customheader1: 'test1'};
@@ -148,7 +186,7 @@ soap.createClient(url, clientOptions, function(err, client) {
 
 Describes services, ports and methods as a JavaScript object.
 
-```javascript
+```js
 // Describes the entire WSDL in a JSON tree object form.
 var description = client.describe();
 // Inspect GetQuote operation. You can inspect Service: {Port: {operation: {
@@ -165,18 +203,36 @@ Refer to test case [ssl-test](https://github.com/strongloop/strong-soap/blob/mas
 
 Call *method* on the SOAP service.
 
-``` javascript
+```js
   client.MyFunction({name: 'value'}, function(err, result, envelope, soapHeader) {
       // Result is a javascript object
       // Envelope is the response envelope from the Web Service
       // soapHeader is the response soap header as a JavaScript object
   })
 ```
+
+A *method* can also be called as a promise.
+
+```js
+  client.MyFunction({name: 'value'}).then(function({result, envelope, soapHeader}){
+    // ...
+  }, function(err) {
+    // ...
+  });
+
+  // in async/await flavor
+  try {
+    const {result, envelope, soapHeader} = await client.MyFunction({name: 'value'});
+  } catch(err) {
+    // handle error
+  }
+```
+
 ### Client.*service*.*port*.*method*(args, callback[, options[, extraHeaders]])
 
 Call a *method* using a specific *service* and *port*.
 
-``` javascript
+```js
   client.MyService.MyPort.MyFunction({name: 'value'}, function(err, result) {
       // Result is a JavaScript object
   })
@@ -188,7 +244,7 @@ Call a *method* using a specific *service* and *port*.
 
  For example, you could set a timeout of 5 seconds on the request like this:
 
-``` javascript
+```js
   client.MyService.MyPort.MyFunction({name: 'value'}, function(err, result) {
       // result is a javascript object
   }, {timeout: 5000})
@@ -196,7 +252,7 @@ Call a *method* using a specific *service* and *port*.
 
 You can measure the elapsed time on the request by passing the time option:
 
-``` javascript
+```js
   client.MyService.MyPort.MyFunction({name: 'value'}, function(err, result) {
       // client.lastElapsedTime - the elapsed time of the last request in milliseconds
   }, {time: true})
@@ -206,7 +262,7 @@ You can measure the elapsed time on the request by passing the time option:
 
 To align method call signature with Node's standard callback-last pattern and eventually allow promisification of method calls, the following method signatures are also supported:
 
-```javascript
+```js
 client.MyService.MyPort.MyFunction({name: 'value'}, options, function (err, result) {
   // result is a javascript object
 })
@@ -241,7 +297,7 @@ For an example of using this API, see  [ssl-test](https://github.com/strongloop/
 
 Here is an example of 'soapError' event
 
-```
+```js
 soap.createClient(__dirname + '/wsdl/default_namespace.wsdl', function (err, client) {
   var didEmitEvent = false;
   client.on('soapError', function(err) {
@@ -265,13 +321,13 @@ as well.  The interface is quite simple. Each protocol defines two methods:
 
 ### BasicAuthSecurity
 
-``` javascript
+```js
   client.setSecurity(new soap.BasicAuthSecurity('username', 'password'));
 ```
 
 ### BearerSecurity
 
-``` javascript
+```js
   client.setSecurity(new soap.BearerSecurity('token'));
 ```
 
@@ -283,7 +339,7 @@ as default request options to the constructor:
 * `strictSSL: false`
 * `secureOptions: constants.SSL_OP_NO_TLSv1_2` (this is likely needed for node >= 10.0)
 
-``` javascript
+```js
   client.setSecurity(new soap.ClientSSLSecurity(
     '/path/to/key'
     , '/path/to/cert'
@@ -295,7 +351,7 @@ as default request options to the constructor:
 
 `WSSecurity` implements WS-Security. UsernameToken and PasswordText/PasswordDigest is supported.
 
-``` javascript
+```js
   var wsSecurity = new WSSecurity(username, password, options)
     //the 'options' object is optional and contains properties:
     //passwordType: 'PasswordDigest' or 'PasswordText' default is PasswordText
@@ -308,7 +364,7 @@ as default request options to the constructor:
 
 WS-Security X509 Certificate support.
 
-``` javascript
+```js
   var privateKey = fs.readFileSync(privateKeyPath);
   var publicKey = fs.readFileSync(publicKeyPath);
   var password = ''; // optional password
@@ -325,7 +381,7 @@ _Note_: Optional dependency 'ursa' is required to be installed successfully when
 To override the default behavior of `strong-soap`, use the `wsdlOptions` object, passed in the
 `createClient()` method.  The `wsdlOptions` has the following properties:
 
-```javascript
+```js
 var wsdlOptions = {
   attributesKey: 'theAttrs',
   valueKey: 'theVal',
@@ -346,7 +402,7 @@ By default, `strong-soap` uses `$value` as key for any parsed XML value which ma
 could be some reserved word, or the `$` in general cannot be used for a key to start with.
 
 You can define your own `valueKey` by passing it in the `wsdl_options` to the createClient call like so:
-```javascript
+```js
 var wsdlOptions = {
   valueKey: 'theVal'
 };
@@ -361,7 +417,7 @@ As `valueKey`, `strong-soap` uses `$xml` as key. The xml key is used to pass XML
 
 Example :
 
-```javascript
+```js
 dom = {
      $xml: '<parentnode type="type"><childnode></childnode></parentnode>'
 };
@@ -377,7 +433,7 @@ dom = {
 
 You can define your own `xmlKey` by passing it in the `wsdl_options` to the createClient call like this:
 
-```javascript
+```js
 var wsdlOptions = {
   xmlKey: 'theXml'
 };
@@ -391,7 +447,7 @@ soap.createClient(__dirname + '/wsdl/default_namespace.wsdl', wsdlOptions, funct
 
 You can achieve attributes like:
 
-``` xml
+```xml
 <parentnode>
   <childnode name="childsname">
   </childnode>
@@ -399,7 +455,7 @@ You can achieve attributes like:
 ```
 By attaching an attributes object to a node.
 
-``` javascript
+```js
 {
   parentnode: {
     childnode: {
@@ -420,7 +476,7 @@ However, "attributes" may be a reserved key for some systems that actually want 
 
 In this case you can configure the attributes key in the `wsdlOptions` like this:
 
-```javascript
+```js
 var wsdlOptions = {
   attributesKey: '$attributes'
 };
@@ -428,7 +484,7 @@ var wsdlOptions = {
 
 Adding xsiType
 
-```
+```js
 soap.createClient(__dirname + '/wsdl/default_namespace.wsdl', wsdlOptions, function (err, client) {
   client.*method*({
     parentnode: {
@@ -444,7 +500,7 @@ soap.createClient(__dirname + '/wsdl/default_namespace.wsdl', wsdlOptions, funct
 
 Removing the xsiType. The resulting Request shouldn't have the attribute xsiType
 
-```
+```js
 soap.createClient(__dirname + '/wsdl/default_namespace.wsdl', wsdlOptions, function (err, client) {
   client.*method*({
     parentnode: {
@@ -466,8 +522,8 @@ XMLHandler enables you to to convert a JSON object to XML and XML to a JSON obje
 
 API to convert JSON object to XML and XML to JSON object:
 
-```
-  var soap = require('..').soap;
+```js
+var soap = require('..').soap;
 var XMLHandler = soap.XMLHandler;
 var xmlHandler = new XMLHandler();
 var util = require('util');
@@ -498,7 +554,7 @@ soap.createClient(url, clientOptions, function(err, client) {
 
 Parse XML string or stream into the XMLBuilder tree:
 
-```
+```js
 var root = XMLHandler.parseXml(null, xmlString);
 ```
 
@@ -514,7 +570,7 @@ Parameters:
 - `options` WSDL options
 - `callback` Error and WSDL loaded into object tree.
 
-```
+```js
 var soap = require('..').soap;
 var WSDL = soap.WSDL;
 var path = require('path');
@@ -537,6 +593,18 @@ WSDL.open('./wsdls/stockquote.wsdl',options,
 });
 ```
 
+### wsdl.openSync(wsdlURL, options)
+
+Loads WSDL into a tree form directly from memory. It traverses through WSDL tree to get to bindings, services, ports, operations, and so on as long as you have your dependent WSDLs and schemas are loaded and available in the `options.WSDL_CACHE`. If any I/O is required to retrieve any dependencies this call will throw an error.
+
+Parameters:
+
+- `wsdlURL` WSDL url to load as named in the cache.
+- `options` WSDL options
+
+An example of loading WSDLs into your `options.WSDL_CACHE` and calling `wsdl.loadSync()` can be found in the test [test/wsdl-load-from-memory-test](https://github.com/strongloop/strong-soap/tree/master/test/wsdl-load-from-memory-test.js)
+
+
 ## Server
 
 ### soap.listen(*server*, *path*, *services*, *wsdl*)
@@ -545,7 +613,7 @@ Creates a new SOAP server that listens on *path* and provides *services*.
 
 *wsdl* is an xml string that defines the service.
 
-``` javascript
+```js
   var myService = {
       MyService: {
           MyPort: {
@@ -597,7 +665,7 @@ An example of using the SOAP server is in [test/server-client-document-test](htt
 You can pass in server and [WSDL Options](#handling-xml-attributes-value-and-xml-wsdloptions)
 using an options hash.
 
-``` javascript
+```js
 var xml = require('fs').readFileSync('myservice.wsdl', 'utf8');
 
 soap.listen(server, {
@@ -618,7 +686,7 @@ soap.listen(server, {
 If the `log` method is defined it will be called with 'received' and 'replied'
 along with data.
 
-``` javascript
+```js
   server = soap.listen(...)
   server.log = function(type, data) {
     // type is 'received' or 'replied'
@@ -637,7 +705,7 @@ Server instances emit the following events:
 The sequence order of the calls is `request`, `headers` and then the dedicated
 service method.
 
-```
+```js
     test.soapServer.on('request', function requestManager(request, methodName) {
       assert.equal(methodName, 'GetLastTradePrice');
       done();
@@ -654,7 +722,7 @@ object with a `Fault` property.
 
 Example SOAP 1.1 Fault:
 
-``` javascript
+```js
     test.service = {
       DocLiteralWrappedService: {
         DocLiteralWrappedPort: {
@@ -677,7 +745,7 @@ Example SOAP 1.1 Fault:
 
 SOAP 1.2 Fault:
 
-``` javascript
+```js
     test.service = {
       DocLiteralWrappedService: {
         DocLiteralWrappedPort: {
@@ -708,7 +776,7 @@ Examples of  SOAP 1.1/SOAP 1.2 Fault response can be found in test [test/server-
 
 If `server.authenticate` is not defined then no authentication will take place.
 
-``` javascript
+```js
   server = soap.listen(...)
   server.authenticate = function(security) {
     var created, nonce, password, user, token;
@@ -724,7 +792,7 @@ The `server.authorizeConnection` method is called prior to the soap service meth
 If the method is defined and returns `false` then the incoming connection is
 terminated.
 
-``` javascript
+```js
   server = soap.listen(...)
   server.authorizeConnection = function(req) {
     return true; // or false
@@ -738,7 +806,7 @@ terminated.
 
 A service method can look at the SOAP headers by providing a third arguments.
 
-``` javascript
+```js
   {
       HeadersAwareFunction: function(args, cb, headers) {
           return {
@@ -752,7 +820,7 @@ It is also possible to subscribe to the 'headers' event.
 The event is triggered before the service method is called, and only when the
 SOAP Headers are not empty.
 
-``` javascript
+```js
   server = soap.listen(...)
   server.on('headers', function(headers, methodName) {
     // It is possible to change the value of the headers
@@ -813,9 +881,9 @@ your clients.
 
 ### Example
 
-```javascript
+```js
 var sinon = require('sinon');
-var soapStub = require('soap-stub');
+var soapStub = require('strong-soap/soap-stub');
 
 var urlMyApplicationWillUseWithCreateClient = './example/stockquote.wsdl';
 var clientStub = {
@@ -824,6 +892,10 @@ var clientStub = {
 
 clientStub.SomeOperation.respondWithError = soapStub.createRespondingStub({error: 'error'});
 clientStub.SomeOperation.respondWithSuccess = soapStub.createRespondingStub({success: 'success'});
+// or if you are using promises
+clientStub.SomeOperation.respondWithError = soapStub.createRespondingStubAsync({error: 'error'});
+clientStub.SomeOperation.respondWithSuccess = soapStub.createRespondingStubAsync({success: 'success'});
+
 
 soapStub.registerClient('my client alias', urlMyApplicationWillUseWithCreateClient, clientStub);
 

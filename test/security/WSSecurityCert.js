@@ -1,3 +1,8 @@
+// Copyright IBM Corp. 2015,2019. All Rights Reserved.
+// Node module: strong-soap
+// This file is licensed under the MIT License.
+// License text available at https://opensource.org/licenses/MIT
+
 'use strict';
 
 var fs = require('fs'),
@@ -17,7 +22,7 @@ describe('WSSecurityCert', function() {
     if(process.platform === 'win32'){
       return true;
     }
-    var instance = new WSSecurityCert(key, cert, '', 'utf8');
+    var instance = new WSSecurityCert(key, cert, '');
     instance.should.have.property('privateKey');
     instance.should.have.property('publicP12PEM');
     instance.should.have.property('signer');
@@ -31,7 +36,7 @@ describe('WSSecurityCert', function() {
     var passed = true;
 
     try {
-      new WSSecurityCert('*****', cert, '', 'utf8');
+      new WSSecurityCert('*****', cert, '');
     } catch(e) {
       passed = false;
     }
@@ -41,16 +46,6 @@ describe('WSSecurityCert', function() {
     }
 
     passed = true;
-
-    try {
-      new WSSecurityCert(key, cert, '', 'bob');
-    } catch(e) {
-      passed = false;
-    }
-
-    if (passed) {
-      throw new Error('bad encoding');
-    }
   });
 
   it('should insert a WSSecurity signing block when postProcess is called',
@@ -58,7 +53,7 @@ describe('WSSecurityCert', function() {
     if(process.platform === 'win32'){
       return true;
     }
-    var instance = new WSSecurityCert(key, cert, '', 'utf8');
+    var instance = new WSSecurityCert(key, cert, '');
     var env = XMLHandler.createSOAPEnvelope();
     instance.postProcess(env.header, env.body);
     var xml = env.header.toString({pretty: false});
@@ -83,7 +78,7 @@ describe('WSSecurityCert', function() {
     xml.should.containEql('<wsu:Expires>' + instance.expires);
     xml.should.containEql('<Signature ' +
       'xmlns="http://www.w3.org/2000/09/xmldsig#">');
-    xml.should.containEql('<wsse:SecurityTokenReference>');
+    xml.should.containEql('<wsse:SecurityTokenReference');
     xml.should.containEql('<wsse:Reference URI="' + instance.x509Id);
     xml.should.containEql('ValueType="http://docs.oasis-open.org/wss/2004/01/' +
       'oasis-200401-wss-x509-token-profile-1.0#X509v3"/>');
